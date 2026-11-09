@@ -32,11 +32,11 @@ are evidence, not shipped contracts, when a later ADR supersedes them.
   marker contract, and its staleness limits.
 
 The package runs asynchronous Pi children in Herdr and supports managed
-worktrees for writing tasks. This fork also ships the
-[orchestrator team](orchestrator-team.md) as a second extension: the
-`pi-herdr-agents` operating skill plus the team roles and their skills. The host
-remains a pack-neutral execution host for every other role; project definitions,
-global definitions, and installed role packs still supply them
+worktrees for writing tasks. This fork's single extension also composes the
+[orchestrator team](orchestrator-team.md): the `pi-herdr-agents` operating skill
+plus the team roles and their skills. The host remains a pack-neutral execution
+host for every other role; project definitions, global definitions, and installed
+role packs still supply them
 ([ADR-0013](adr/0013-pack-neutral-execution-host.md),
 [ADR-0018](adr/0018-bundle-orchestrator-team.md)). A `read,bash` tool allowlist
 is not read-only because shell commands can change files.
@@ -55,8 +55,9 @@ architecture decision.
 - `../maestro/runtime/` — run ownership and real Pi/Herdr composition.
 - `../pi-extension/subagents/index.ts` — Pi host entry point;
   `model-registry.ts` and `config-path.ts` remain permanent host-local owners.
-- `../pi-extension/team/index.ts` — bundled orchestrator-team extension: role
-  registration and the parent-only `/team` command.
+- `../pi-extension/subagents/team/register.ts` — the bundled orchestrator-team
+  module called by the single host entry: role registration and the parent-only
+  `/team` command.
 - `../test/maestro/` — seam conformance and dependency-rule tests; real
   conformance runs in `../test/integration/`.
 
@@ -84,7 +85,7 @@ real implementations; in-memory fakes are conformance fixtures only.
 | [`0015`](adr/0015-report-opened-primary-workspace.md) | Accepted | Report, and never automatically close, a primary workspace that worktree creation opened. |
 | [`0016`](adr/0016-delegation-outcome-contract.md) | Accepted | Define a small, versioned delegation outcome contract with this package as its reference implementation. |
 | [`0017`](adr/0017-accept-check.md) | Accepted | A caller-supplied accept check; the parent's re-check decides a verdict from a closed set, and each model attempt adds an outcome-ledger line. |
-| [`0018`](adr/0018-bundle-orchestrator-team.md) | Accepted (fork) | Bundle the orchestrator team as a second extension in this fork; supersedes ADR-0013 for this fork. |
+| [`0018`](adr/0018-bundle-orchestrator-team.md) | Accepted (fork) | Bundle the orchestrator team in the single extension of this fork; supersedes ADR-0013 for this fork. |
 
 ## Active design
 

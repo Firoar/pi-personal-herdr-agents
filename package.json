@@ -54,8 +54,7 @@
   },
   "pi": {
     "extensions": [
-      "./pi-extension/subagents/index.ts",
-      "./pi-extension/team/index.ts"
+      "./pi-extension/subagents/index.ts"
     ],
     "skills": [
       "./skills"

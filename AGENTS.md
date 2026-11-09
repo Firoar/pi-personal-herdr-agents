@@ -7,14 +7,14 @@ These instructions apply to humans and coding agents changing `pi-herdr-agents`.
 `pi-herdr-agents` (Pi Herdr Agents) is a Pi extension that launches asynchronous Pi child agents exclusively in Herdr. Ordinary runs group child panes in extension-owned `Agents` tabs by default. Writing tasks may opt into one isolated Herdr-managed Git worktree per branch. Legacy role definitions that request an external CLI fail before Herdr creates resources.
 
 The host is a pack-neutral execution host for every role except this fork's
-bundled orchestrator team. The fork ships a second extension,
-`pi-extension/team/index.ts`, with four roles (`team-senior`, `team-worker`,
-`team-tester`, `team-researcher`), the `team-protocol`, `strict-tests`,
-`team-research`, and vendored `ponytail` skills, and a parent-only `/team`
-command. Do not add unrelated roles or workflows; every other named role still
-comes from project or global definitions and separately installed role packs.
-See [ADR-0018](docs/adr/0018-bundle-orchestrator-team.md). The host remains
-Pi-on-Herdr only: no other harness or terminal multiplexer.
+bundled orchestrator team. The fork's single extension composes a team module,
+`pi-extension/subagents/team/register.ts`, with four roles (`team-senior`,
+`team-worker`, `team-tester`, `team-researcher`), the `team-protocol`,
+`strict-tests`, `team-research`, and vendored `ponytail` skills, and a
+parent-only `/team` command. Do not add unrelated roles or workflows; every
+other named role still comes from project or global definitions and separately
+installed role packs. See [ADR-0018](docs/adr/0018-bundle-orchestrator-team.md).
+The host remains Pi-on-Herdr only: no other harness or terminal multiplexer.
 
 The extension is fire-and-forget: `subagent` returns an acknowledgement, and completion is delivered to the parent automatically. Never add polling guidance that tells callers to sleep, tail sessions, or repeatedly check status.
 
@@ -31,12 +31,12 @@ The extension is fire-and-forget: `subagent` returns an acknowledgement, and com
 - [`docs/worktree-subagents.md`](docs/worktree-subagents.md) — canonical worktree operating, review, recovery, and cleanup guide
 - [`RELEASING.md`](RELEASING.md) — release checks and publishing procedure
 
-Former upstream bundled roles, `/plan`, its plan skill, and `/skill:orchestrate` remain removed; they belong to the separately maintained `pi-herdr-roles` and `pi-herdr-pstack` packs. The fork reintroduces only the orchestrator team, under `pi-extension/team/`. `/iterate`, `/btw`, and `/btw-close` remain removed.
+Former upstream bundled roles, `/plan`, its plan skill, and `/skill:orchestrate` remain removed; they belong to the separately maintained `pi-herdr-roles` and `pi-herdr-pstack` packs. The fork reintroduces only the orchestrator team, under `pi-extension/subagents/team/`. `/iterate`, `/btw`, and `/btw-close` remain removed.
 
 ## Code map
 
 - `pi-extension/subagents/index.ts` — Pi composition root: loads config, adopts the reload-surviving runtime, builds the per-load controllers, and registers session handlers, tools, commands, and renderers in order; also the `__test__` surface
-- `pi-extension/team/index.ts`, `pi-extension/team/roles/` — bundled orchestrator-team extension: registers its four roles through the role-pack event and adds the parent-only `/team` command; imports nothing from the host
+- `pi-extension/subagents/team/register.ts`, `pi-extension/subagents/team/roles/` — the bundled orchestrator-team module called by the single host entry: registers its four roles through the role-pack event and adds the parent-only `/team` command; imports nothing from the host runtime
 - `skills/team-protocol/`, `skills/strict-tests/`, `skills/team-research/`, `skills/ponytail/` — the team's declared skills; `ponytail` and the research method are vendored under MIT ([`ATTRIBUTION.md`](ATTRIBUTION.md))
 - `pi-extension/subagents/state.ts`, `catalog.ts`, `presentation.ts` — run-state types and reload slots; role catalog, `subagent` parameters, and launch policy; the parent message model, its one serializer, and the child-report envelope
 - `pi-extension/subagents/tool-boundary.ts` — the one registration boundary that encodes errors thrown by any host tool or command
@@ -109,7 +109,7 @@ When behavior changes, update every affected surface in the same commit:
 - code map → this file and `docs/development.md`
 - role-pack discovery, precedence, or collision policy → `docs/adr/0003-installable-role-packs.md`
 - worktree behavior, handoff, recovery, or cleanup → `docs/worktree-subagents.md`
-- role prompts and the bundled team's methodology → `pi-extension/team/roles/`, `skills/team-*`, and `docs/orchestrator-team.md`; other role packs own their own roles and workflows
+- role prompts and the bundled team's methodology → `pi-extension/subagents/team/roles/`, `skills/team-*`, and `docs/orchestrator-team.md`; other role packs own their own roles and workflows
 - the `PI_SUBAGENT_ID` child-context hint → `docs/tools.md` and `CONTEXT.md`
 - contributor/release verification → this file, `docs/development.md`, `.pi/skills/verify-pi-herdr-agents/SKILL.md`, `.pi/skills/run-integration-tests/SKILL.md`, or `RELEASING.md`
 - domain terminology → `CONTEXT.md`
@@ -151,7 +151,7 @@ Use `PI_TEST_MODEL="openai-codex/gpt-5.6-luna" PI_TEST_TIMEOUT=180000 npm run te
 Before committing:
 
 - inspect `git status` and the final diff;
-- confirm the package preview includes `CHANGELOG.md`, `README.md`, `ATTRIBUTION.md`, `config.json.example`, `pi-extension/subagents/index.ts`, `pi-extension/team/index.ts`, the four `pi-extension/team/roles/*.md`, `docs/orchestrator-team.md`, the five declared skills, and no `agents/` resources or `pi-extension/subagents/plan-skill.md`, and excludes `pi-extension/subagents/workflow-worker.js`, plans, journals, sessions, prototypes, generated evidence, local config, and `openspec/`;
+- confirm the package preview includes `CHANGELOG.md`, `README.md`, `ATTRIBUTION.md`, `config.json.example`, `pi-extension/subagents/index.ts`, `pi-extension/subagents/team/register.ts`, the four `pi-extension/subagents/team/roles/*.md`, `docs/orchestrator-team.md`, the five declared skills, and no `agents/` resources or `pi-extension/subagents/plan-skill.md`, and excludes `pi-extension/subagents/workflow-worker.js`, plans, journals, sessions, prototypes, generated evidence, local config, and `openspec/`;
 - run `npm pack --dry-run` when package contents or documentation paths changed; durable configuration is `$PI_CODING_AGENT_DIR/herdr-agents/config.json`, never package-root `config.json` (move old files manually or re-run `/subagents-init`);
 - confirm that no generated plans, journals, sessions, provider configuration, test scripts, or review artifacts are staged; and
 - confirm that no accidental empty directory exists at the repository root:

@@ -27,7 +27,7 @@ Delegate investigation, implementation, and review without blocking the parent s
 - **Live supervision.** Pi's subagent widget tracks process and turn state. You can interrupt one child turn without ending its session.
 - **Managed worktrees.** Writing agents can run in retained Herdr workspaces with explicit Git ownership and recovery details.
 - **Conversation handoff.** `/worktree` continues the active Pi conversation in a new worktree and keeps the parent session.
-- **Bundled orchestrator team.** This fork ships a second extension with a persistent senior, workers, a strict tester, and a researcher. Other roles use project or global definitions and installable role packs.
+- **Bundled orchestrator team.** This fork's single extension composes a team module with a persistent senior, workers, a strict tester, and a researcher. Other roles use project or global definitions and installable role packs.
 - **Persistent specialists.** Keep one policy-bound Pi session for sequential, turn-based tasks.
 - **Optional sidebar focus.** The companion [Pi Herdr Agents Sidebar](plugins/sidebar/README.md) Herdr plugin hides marked delegated children from Herdr's Agents view while Focus is on. Markers are display only and follow the pane. See [Sidebar plugin](#sidebar-plugin).
 
@@ -219,7 +219,7 @@ Read [Worktree subagents](docs/worktree-subagents.md) before you run writing age
 
 ## Orchestrator team
 
-This fork ships a second extension with a ready-made hierarchy:
+This fork's single extension composes a bundled team with a ready-made hierarchy:
 
 ```text
 you → orchestrator (your Pi session)

@@ -4,10 +4,10 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { discoverAgentCatalog } from "../maestro/core/roles/discovery.ts";
-import { parseTeamArgs } from "../pi-extension/team/index.ts";
+import { parseTeamArgs } from "../pi-extension/subagents/team/register.ts";
 
 const teamRoles = fileURLToPath(
-	new URL("../pi-extension/team/roles", import.meta.url),
+	new URL("../pi-extension/subagents/team/roles", import.meta.url),
 );
 const absentAgentDir = join(tmpdir(), "pi-team-test-agent-dir");
 const absentProjectDir = join(tmpdir(), "pi-team-test-project-dir");

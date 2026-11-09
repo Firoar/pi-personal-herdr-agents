@@ -92,6 +92,7 @@ import {
 	registerResumeTool,
 	registerSubagentCommand,
 } from "./launch-tools.ts";
+import { registerTeam } from "./team/register.ts";
 
 export {
 	hasWorkingSubagents,
@@ -548,4 +549,9 @@ export default function subagentsExtension(
 	registerSubagentCommand(host);
 
 	registerMessageRenderers(pi);
+
+	// The bundled team is part of this single extension. Register it after the
+	// host so the host's session_shutdown handler keeps its established order;
+	// role discovery and the parent-only /team command work on demand.
+	registerTeam(pi);
 }

@@ -11393,7 +11393,7 @@ describe("commands", () => {
 		const previousId = process.env.PI_SUBAGENT_ID;
 		try {
 			for (const [childId, expected] of [
-				[undefined, ["subagent", "subagents-init", "worktree"]],
+				[undefined, ["subagent", "subagents-init", "team", "worktree"]],
 				["command-inventory-child", ["subagent", "worktree"]],
 			] as const) {
 				restoreEnvVar("PI_SUBAGENT_ID", childId);

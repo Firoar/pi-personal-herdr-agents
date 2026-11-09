@@ -92,10 +92,9 @@ describe("production package manifest", () => {
 });
 
 describe("fork package contents", () => {
-	it("ships the host extension, the team extension, its roles, and its skills", () => {
+	it("ships the single extension, its team module, roles, and skills", () => {
 		assert.deepEqual(manifest.pi?.extensions, [
 			"./pi-extension/subagents/index.ts",
-			"./pi-extension/team/index.ts",
 		]);
 		// An explicit `pi` manifest disables conventional `skills/` discovery, so
 		// every shipped skill must be declared to load at all.
@@ -121,11 +120,11 @@ describe("fork package contents", () => {
 			"ATTRIBUTION.md",
 			"config.json.example",
 			"pi-extension/subagents/index.ts",
-			"pi-extension/team/index.ts",
-			"pi-extension/team/roles/team-senior.md",
-			"pi-extension/team/roles/team-worker.md",
-			"pi-extension/team/roles/team-tester.md",
-			"pi-extension/team/roles/team-researcher.md",
+			"pi-extension/subagents/team/register.ts",
+			"pi-extension/subagents/team/roles/team-senior.md",
+			"pi-extension/subagents/team/roles/team-worker.md",
+			"pi-extension/subagents/team/roles/team-tester.md",
+			"pi-extension/subagents/team/roles/team-researcher.md",
 			"docs/orchestrator-team.md",
 			"examples/role-pack/extension.ts",
 			"examples/role-pack/roles/example-reviewer.md",
@@ -149,10 +148,10 @@ describe("fork package contents", () => {
 					shippedSkillFiles.has(path),
 					`unexpected packaged skill resource: ${path}`,
 				);
-			if (path.startsWith("pi-extension/team/roles/"))
+			if (path.startsWith("pi-extension/subagents/team/roles/"))
 				assert.match(
 					path,
-					/^pi-extension\/team\/roles\/team-(senior|worker|tester|researcher)\.md$/,
+					/^pi-extension\/subagents\/team\/roles\/team-(senior|worker|tester|researcher)\.md$/,
 					`unexpected team role resource: ${path}`,
 				);
 			assert.doesNotMatch(path, /(^|\/)(?:claude\.ts|plugin)(?:\/|$)/);

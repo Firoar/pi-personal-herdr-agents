@@ -165,14 +165,14 @@ _Avoid_: Silent Pi reinterpretation, compatibility adapter
 The upstream execution-host posture: no agent roles and no planning or review
 workflows, with role packs and project or global definitions supplying every
 named role. This fork keeps that posture for every role except the bundled
-orchestrator team, which ships as a second extension.
+orchestrator team, which the single extension composes from its team module.
 _Avoid_: Upstream default role set, privileged pack, starter workflow
 
 **Orchestrator team**:
 The fork's bundled hierarchy: a parent orchestrator, one persistent senior that
 owns a worktree, workers and testers that implement and verify bounded
 assignments, and a read-only researcher. Registered by
-`pi-extension/team/index.ts` through the role-pack event; bounded by
+`pi-extension/subagents/team/register.ts` through the role-pack event; bounded by
 `spawn-agents`.
 _Avoid_: Workflow engine, automatic orchestration, privileged default pack
 

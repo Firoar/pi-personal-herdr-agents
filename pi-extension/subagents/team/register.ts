@@ -4,11 +4,11 @@ import { fileURLToPath } from "node:url";
 const roles = fileURLToPath(new URL("./roles", import.meta.url));
 
 /**
- * Register this pack's roles with pi-herdr-agents, and expose a parent-only
- * `/team` launcher. Children load installed packages too, so the command is
- * registered only in a top-level session.
+ * Register the bundled team's roles with the host, and expose a parent-only
+ * `/team` launcher. The host entry calls this in every session, so the command
+ * is registered only in a top-level session.
  */
-export default function orchestratorTeam(pi: ExtensionAPI) {
+export function registerTeam(pi: ExtensionAPI) {
 	const unsubscribe = pi.events.on(
 		"pi-herdr-subagents:roles:discover:v1",
 		(request) => {

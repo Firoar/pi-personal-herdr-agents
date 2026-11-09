@@ -5,10 +5,11 @@ This fork ships an optional hierarchy on top of the host: one persistent
 tests, and a **researcher** answers bounded questions. Your parent Pi session is
 the **orchestrator**.
 
-The team is a second extension in this package
-([`pi-extension/team/index.ts`](../pi-extension/team/index.ts)). It registers its
-roles through the public role-pack event and adds a parent-only `/team` command.
-It imports nothing from the host, so it stays removable.
+The team is a module of this package's single extension
+([`pi-extension/subagents/team/register.ts`](../pi-extension/subagents/team/register.ts)).
+The host entry calls `registerTeam(pi)`; it registers its roles through the
+public role-pack event and adds a parent-only `/team` command. It imports
+nothing from the host runtime, so it stays removable.
 
 Pi + Herdr only.
 

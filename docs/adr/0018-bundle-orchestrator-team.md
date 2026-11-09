@@ -18,18 +18,21 @@ the same install, with the team versioned and tested beside the host.
 
 ## Decision
 
-Ship the orchestrator team as a second Pi extension in this package:
+Ship the orchestrator team as a module composed by the single host extension
+entry:
 
-- `pi-extension/team/index.ts` registers `pi-extension/team/roles/` through the
-  public `pi-herdr-subagents:roles:discover:v1` event and adds a parent-only
-  `/team` command.
+- `pi-extension/subagents/index.ts` remains the one `pi.extensions` entry and
+  calls `registerTeam(pi)`.
+- `pi-extension/subagents/team/register.ts` registers
+  `pi-extension/subagents/team/roles/` through the public
+  `pi-herdr-subagents:roles:discover:v1` event and adds a parent-only `/team`
+  command.
 - The four roles and four skills (team protocol, strict tests, team research,
   and the vendored Ponytail skill) ship in the package.
 - The `spawn-agents` role field enforces the hierarchy: the senior may launch
   workers, testers, and the researcher; leaves may launch only the researcher.
-- The host's execution architecture is unchanged. The team extension imports
-  nothing from the host, so it remains removable and a future separately
-  published pack can reuse the same roles.
+- The team module imports nothing from the host runtime, so it stays removable
+  and testable while the package loads as one extension.
 
 The upstream pack-neutral rule no longer governs this fork. Project and global
 definitions and separately installed role packs still work and still take
@@ -37,7 +40,8 @@ precedence.
 
 ## Consequences
 
-- One install, one version, and one test suite cover the host and the team.
+- One extension entry, one install, one version, and one test suite cover the
+  host and the team.
 - The package is opinionated and larger: every install carries four roles and
   four skills.
 - Upstream merges will conflict in `AGENTS.md`, `package.json`, `README.md`,
@@ -51,8 +55,12 @@ precedence.
 
 ## Alternatives considered
 
-- **Keep the host pack-neutral and ship the team as a separate package.** Better
-  for independent publication, but it adds a second install and release path
-  for a personal fork. Revisit if the team needs its own release cadence.
-- **Merge the team into the existing subagents extension.** Tighter coupling,
-  no removable boundary, and a larger composition root. Rejected.
+- **Ship the team as a separate extension entry.** Rejected: the fork exists to
+  build one extension, and a second entry would make the old and new extension
+  surfaces coexist.
+- **Inline every team detail into `pi-extension/subagents/index.ts`.** Rejected:
+  it grows the composition root and loses the testable module boundary for no
+  functional gain.
+- **Keep the host pack-neutral and ship the team as a separate package.**
+  Rejected for this personal fork; revisit if the team needs its own release
+  cadence.
