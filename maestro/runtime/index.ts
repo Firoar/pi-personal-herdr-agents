@@ -18,6 +18,7 @@ export type { TaskModelInitOutcome } from "./task-model-init.ts";
 export {
 	createDefaultRunSession,
 	observePiActivity,
+	readPiSessionAgent,
 } from "./pi-run-session.ts";
 export type {
 	DefaultRunSessionOptions,

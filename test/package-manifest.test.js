@@ -45,10 +45,19 @@ const ordinaryReviewClauses = [
 	"Disclose that this review is context-isolated, not cross-family independent.",
 	"Cross-family verification must not use this fallback.",
 ];
-// Host-owned operational skills are the only shipped skills; workflow skills
-// such as orchestrate and plan belong to role packs.
-const hostSkills = ["pi-herdr-agents"];
-const hostSkillFiles = new Set(hostSkills.map((n) => `skills/${n}/SKILL.md`));
+// This fork ships the host's operating skill and the bundled orchestrator team.
+// The team's roles are registered by its own extension; the skills are declared
+// only on those roles.
+const shippedSkills = [
+	"pi-herdr-agents",
+	"team-protocol",
+	"strict-tests",
+	"team-research",
+	"ponytail",
+];
+const shippedSkillFiles = new Set(
+	shippedSkills.map((n) => `skills/${n}/SKILL.md`),
+);
 const packageFiles = new Set(
 	JSON.parse(
 		execFileSync("npm", ["pack", "--dry-run", "--json"], {
@@ -82,13 +91,14 @@ describe("production package manifest", () => {
 	});
 });
 
-describe("pack-neutral package contents", () => {
-	it("ships only the extension, with no bundled roles or workflow resources", () => {
+describe("fork package contents", () => {
+	it("ships the host extension, the team extension, its roles, and its skills", () => {
 		assert.deepEqual(manifest.pi?.extensions, [
 			"./pi-extension/subagents/index.ts",
+			"./pi-extension/team/index.ts",
 		]);
 		// An explicit `pi` manifest disables conventional `skills/` discovery, so
-		// the host-owned operational skill must be declared to load at all.
+		// every shipped skill must be declared to load at all.
 		assert.deepEqual(manifest.pi?.skills, ["./skills"]);
 		assert.equal(Object.hasOwn(manifest.pi ?? {}, "prompts"), false);
 		for (const script of ["format", "format:check", "lint", "test"]) {
@@ -108,8 +118,15 @@ describe("pack-neutral package contents", () => {
 			"CHANGELOG.md",
 			"CONTEXT.md",
 			"RELEASING.md",
+			"ATTRIBUTION.md",
 			"config.json.example",
 			"pi-extension/subagents/index.ts",
+			"pi-extension/team/index.ts",
+			"pi-extension/team/roles/team-senior.md",
+			"pi-extension/team/roles/team-worker.md",
+			"pi-extension/team/roles/team-tester.md",
+			"pi-extension/team/roles/team-researcher.md",
+			"docs/orchestrator-team.md",
 			"examples/role-pack/extension.ts",
 			"examples/role-pack/roles/example-reviewer.md",
 			"docs/worktree-subagents.md",
@@ -129,8 +146,14 @@ describe("pack-neutral package contents", () => {
 			);
 			if (path.startsWith("skills/"))
 				assert.ok(
-					hostSkillFiles.has(path),
+					shippedSkillFiles.has(path),
 					`unexpected packaged skill resource: ${path}`,
+				);
+			if (path.startsWith("pi-extension/team/roles/"))
+				assert.match(
+					path,
+					/^pi-extension\/team\/roles\/team-(senior|worker|tester|researcher)\.md$/,
+					`unexpected team role resource: ${path}`,
 				);
 			assert.doesNotMatch(path, /(^|\/)(?:claude\.ts|plugin)(?:\/|$)/);
 			assert.doesNotMatch(path, /^tools\//);
@@ -207,8 +230,8 @@ describe("pack-neutral package contents", () => {
 		assert.equal(existsSync(join(root, "agents")), false, "agents/ remains");
 	});
 
-	it("ships only valid host-owned operational skills", () => {
-		for (const name of hostSkills) {
+	it("ships only valid operational and team skills", () => {
+		for (const name of shippedSkills) {
 			const path = `skills/${name}/SKILL.md`;
 			assert.equal(packageFiles.has(path), true, `missing ${path}`);
 			const body = readFileSync(join(root, path), "utf8");

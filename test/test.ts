@@ -2212,7 +2212,7 @@ describe("host adapter migration", () => {
 					await assert.rejects(
 						f.launch({ name: "missing", task: "bounded", agent, worktree }),
 						new RegExp(
-							`Agent \\\\"${agent}\\\\" was not found\\. pi-herdr-agents ships no roles`,
+							`Agent \\\\"${agent}\\\\" was not found\\. This fork ships the team-\\* roles`,
 						),
 					);
 			assert.equal(worktrees, 0);
@@ -3520,7 +3520,7 @@ describe("session.ts", () => {
 			});
 
 			const restrictedPolicy = readSubagentSessionPolicy(restricted);
-			assert.equal(restrictedPolicy.version, 2);
+			assert.equal(restrictedPolicy.version, 3);
 			assert.equal(restrictedPolicy.owner, "public");
 			assert.deepEqual(restrictedPolicy.tools, ["read"]);
 			assert.deepEqual(restrictedPolicy.deniedTools, ["subagent"]);
@@ -3546,7 +3546,7 @@ describe("session.ts", () => {
 			writeFileSync(
 				policyFile,
 				JSON.stringify({
-					version: 3,
+					version: 4,
 					owner: "public",
 					tools: null,
 					deniedTools: [],
@@ -3560,7 +3560,7 @@ describe("session.ts", () => {
 		});
 	});
 
-	it("writes v2 persistent policies and reads v1 compatibility", () => {
+	it("writes v3 persistent policies and reads v1 compatibility", () => {
 		const persistent = join(dir, "persistent-policy.jsonl");
 		writeSubagentSessionPolicy(persistent, {
 			owner: "public",
@@ -3571,7 +3571,7 @@ describe("session.ts", () => {
 			generationId: "generation-1",
 		});
 		const read = readSubagentSessionPolicy(persistent);
-		assert.equal(read.version, 2);
+		assert.equal(read.version, 3);
 		assert.equal(read.persistent, true);
 		assert.equal(read.logicalId, "logical-1");
 		assert.match(read.policyHash, /^[a-f0-9]{64}$/);
@@ -3968,7 +3968,7 @@ describe("subagent resume launch policy", () => {
 				"utf8",
 			);
 			const policy = readSubagentSessionPolicy(fresh.sessionFile);
-			assert.equal(policy.version, 2);
+			assert.equal(policy.version, 3);
 			assert.equal(policy.owner, "public");
 			assert.deepEqual(policy.tools, ["read"]);
 			assert.deepEqual(policy.deniedTools, ["subagent", "subagent_resume"]);
@@ -4931,7 +4931,7 @@ describe("runtime reload configuration", () => {
 					),
 				);
 				assert.ok(notices[0].includes(configPath));
-				assert.match(notices[0], /no longer ships bundled roles/);
+				assert.match(notices[0], /does not use roles\.bundled to load roles/);
 				assert.match(notices[0], /remove roles\.bundled/);
 				assert.equal(readFileSync(configPath, "utf8"), raw);
 

@@ -224,6 +224,35 @@ describe("PiHarnessAdapter", () => {
 			assert.match(denied, /PI_SUBAGENT_SELF_SPAWN=0/);
 			assert.match(denied, /PI_DENY_TOOLS='subagent,/);
 		}));
+	it("always exports the spawn allowlist, empty when unrestricted", async () =>
+		usingFixture(async (f) => {
+			const commands: string[] = [];
+			f.operations.runScript = (_surface, command, options) => {
+				commands.push(command);
+				return options.scriptPath;
+			};
+			const launch = async (
+				defaults: NonNullable<SpawnOptions["role"]["defaults"]>,
+			) => {
+				await f.adapter.spawn({
+					...f.options,
+					role: { ...f.options.role, defaults },
+				});
+				return commands.at(-1) ?? "";
+			};
+			assert.match(
+				await launch({ autoExit: true }),
+				/PI_SUBAGENT_SPAWN_AGENTS=''/,
+			);
+			const restricted = await launch({
+				autoExit: true,
+				spawnAgents: ["team-researcher", "team-tester"],
+			});
+			assert.match(
+				restricted,
+				/PI_SUBAGENT_SPAWN_AGENTS='team-researcher,team-tester'/,
+			);
+		}));
 	it("never lets pane-shell values for self-spawn or depth reach a child", async () =>
 		usingFixture(async (f) => {
 			const commands: string[] = [];

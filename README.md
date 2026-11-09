@@ -17,7 +17,7 @@ Delegate investigation, implementation, and review without blocking the parent s
 - [Features](#features), [Requirements](#requirements), [Install](#install)
 - [Quick start](#quick-start), [How it works](#how-it-works), [Tools and commands](#tools-and-commands)
 - [Choose models](#choose-models), [Control running children](#control-running-children), [Worktrees](#worktrees)
-- [Roles](#roles), [Sidebar plugin](#sidebar-plugin), [Configuration](#configuration)
+- [Orchestrator team](#orchestrator-team), [Roles](#roles), [Sidebar plugin](#sidebar-plugin), [Configuration](#configuration)
 - [Safety and uninstall](#safety-and-uninstall), [Troubleshooting](#troubleshooting), [Documentation](#documentation)
 
 ## Features
@@ -27,7 +27,7 @@ Delegate investigation, implementation, and review without blocking the parent s
 - **Live supervision.** Pi's subagent widget tracks process and turn state. You can interrupt one child turn without ending its session.
 - **Managed worktrees.** Writing agents can run in retained Herdr workspaces with explicit Git ownership and recovery details.
 - **Conversation handoff.** `/worktree` continues the active Pi conversation in a new worktree and keeps the parent session.
-- **Pack-neutral roles.** Use project or global definitions and installable role packs. This package ships no default roles or workflows.
+- **Bundled orchestrator team.** This fork ships a second extension with a persistent senior, workers, a strict tester, and a researcher. Other roles use project or global definitions and installable role packs.
 - **Persistent specialists.** Keep one policy-bound Pi session for sequential, turn-based tasks.
 - **Optional sidebar focus.** The companion [Pi Herdr Agents Sidebar](plugins/sidebar/README.md) Herdr plugin hides marked delegated children from Herdr's Agents view while Focus is on. Markers are display only and follow the pane. See [Sidebar plugin](#sidebar-plugin).
 
@@ -41,17 +41,13 @@ Other terminal multiplexers are not supported. Session startup skips worktree in
 
 ## Install
 
-Install from npm:
+This is a personal fork of `pi-herdr-agents`; install it from the checkout, not
+from the upstream npm package.
 
 ```bash
-pi install npm:pi-herdr-agents
-```
-
-Install project-locally, or try it for one run:
-
-```bash
-pi install -l npm:pi-herdr-agents
-pi -e npm:pi-herdr-agents
+pi install -l /absolute/path/to/pi-personal-herdr-agents
+# or try it for one run
+pi -e /absolute/path/to/pi-personal-herdr-agents
 ```
 
 Then start Pi inside Herdr:
@@ -88,7 +84,7 @@ subagent({ name: "auth-research", model: "<provider>/<fast-tier-id>", thinking: 
 subagent({ name: "auth-research2", model: "<provider>/<fast-tier-id>", thinking: "low", task: "Map the session schema" });
 ```
 
-Named roles such as `scout` come from your project or global definitions or from an installed role pack. This package ships none. When one supplies `scout`, you can launch it by name:
+Named roles such as `scout` come from your project or global definitions or from an installed role pack. This fork also ships the `team-senior`, `team-worker`, `team-tester`, and `team-researcher` roles. When a definition supplies `scout`, you can launch it by name:
 
 ```text
 /subagent scout Analyze the authentication module and report relevant files and risks
@@ -144,6 +140,7 @@ Children get `caller_ping` to ask the parent for help. Interactive children also
 
 | Command | Use |
 | --- | --- |
+| `/team <slug> <task> [--model=…] [--thinking=…]` | Launch the bundled orchestrator team in a new worktree. |
 | `/subagent <agent> <task>` | Launch a named role. `/subagent list` lists roles. |
 | `/worktree <name> [task]` | Continue this conversation in a new managed worktree. `/worktree list` and `/worktree remove <target>` manage them. |
 | `/subagents-init [preferences]` | Draft task-category model preferences from the live model registry. |
@@ -220,13 +217,40 @@ Removal rechecks eligibility at the moment it runs. It requires the source repos
 
 Read [Worktree subagents](docs/worktree-subagents.md) before you run writing agents in worktrees. It covers task selection, review, recovery, and cleanup. The tool-level contract is in [Isolated worktree runs](docs/tools.md#isolated-worktree-runs) and [Explicit worktree cleanup](docs/tools.md#explicit-worktree-cleanup).
 
+## Orchestrator team
+
+This fork ships a second extension with a ready-made hierarchy:
+
+```text
+you → orchestrator (your Pi session)
+        → team-senior (persistent, one worktree)
+            → team-worker
+            → team-tester
+            → team-researcher
+```
+
+Start one with:
+
+```text
+/team auth Add rate limiting to the login endpoint and test it.
+```
+
+The senior plans, assigns bounded work, reviews the diff, runs the tests, and
+commits. Workers and testers escalate to the senior; the senior escalates to
+you. The team uses one worktree, so writers stay serial. All four roles default
+to `opencode-go/deepseek-v4.1-flash` at `thinking: max`; pass `--model` or
+`--thinking` to `/team` to override them.
+
+Read [Orchestrator team](docs/orchestrator-team.md) for the roles, the
+`spawn-agents` hierarchy, escalation envelopes, and limits.
+
 ## Roles
 
 A bare launch without `agent` always works. A named launch resolves `agent` from these sources, highest priority first:
 
 1. project definitions in `.pi/agents/`
 2. global definitions in `$PI_CODING_AGENT_DIR/agents/` (default `~/.pi/agent/agents/`)
-3. roles registered by installed role packs
+3. roles registered by this package's team extension and installed role packs
 
 `/subagent list` and `subagents_list` show each visible role and its source. A missing or invalid named role fails before Herdr creates a pane or worktree. It is never replaced by a bare agent.
 
@@ -317,6 +341,7 @@ More checks are in [Troubleshooting](docs/troubleshooting.md).
 | [Tools and lifecycle](docs/tools.md) | Every tool and command, parameters, status labels, persistent specialists, interrupt, cancel, resume, and `/worktree` |
 | [Configuration](docs/configuration.md) | `config.json`, model preferences, `/subagents-init`, init events, sidebar markers, supervision, and pane placement |
 | [Roles and custom agents](docs/roles.md) | Discovery, frontmatter reference, tool access control, and role packs |
+| [Orchestrator team](docs/orchestrator-team.md) | The bundled senior, worker, tester, and researcher team, escalation, worktrees, and limits |
 | [Worktree subagents](docs/worktree-subagents.md) | Worktree operation, review, recovery, and cleanup |
 | [Troubleshooting](docs/troubleshooting.md) | Completion delivery and other common problems |
 | [Development](docs/development.md) | Code map, CI, and local checks |

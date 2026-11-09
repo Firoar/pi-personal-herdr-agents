@@ -755,7 +755,7 @@ describe("Pi launch", () => {
 			assert.equal(running.launchScriptFile, scriptPath);
 			assert.ok(running.sessionFile.startsWith(join(agentDir, "sessions")));
 			const policy = readSubagentSessionPolicy(running.sessionFile);
-			assert.equal(policy.version, 2);
+			assert.equal(policy.version, 3);
 			assert.equal(policy.owner, "public");
 			assert.deepEqual(policy.tools, ["read", "bash"]);
 			assert.deepEqual(policy.deniedTools, ["subagent", "subagent_resume"]);

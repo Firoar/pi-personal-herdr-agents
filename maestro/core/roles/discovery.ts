@@ -12,6 +12,7 @@ export interface AgentDefaults {
 	skills?: string;
 	thinking?: ThinkingLevel;
 	denyTools?: string;
+	spawnAgents?: string;
 	spawning?: boolean;
 	selfSpawn?: boolean;
 	persistent?: boolean;
@@ -96,6 +97,10 @@ function runtimeRole(
 				?.split(",")
 				.map((tool) => tool.trim())
 				.filter(Boolean),
+			spawnAgents: definition.spawnAgents
+				?.split(",")
+				.map((name) => name.trim())
+				.filter(Boolean),
 			skills: definition.skills
 				?.split(",")
 				.map((skill) => skill.trim())
@@ -124,6 +129,7 @@ function getFrontmatterValue(
 type CapabilityField =
 	| "tools"
 	| "deny-tools"
+	| "spawn-agents"
 	| "spawning"
 	| "self-spawn"
 	| "persistent";
@@ -166,6 +172,7 @@ function validateCapabilityDeclarations(
 	for (const field of [
 		"tools",
 		"deny-tools",
+		"spawn-agents",
 		"spawning",
 		"self-spawn",
 		"persistent",
@@ -253,6 +260,7 @@ function parseAgentDefinition(
 			getFrontmatterValue(frontmatter, "skill"),
 		thinking: thinking && isThinkingLevel(thinking) ? thinking : undefined,
 		denyTools: getFrontmatterValue(frontmatter, "deny-tools"),
+		spawnAgents: getFrontmatterValue(frontmatter, "spawn-agents"),
 		spawning: parseOptionalBoolean(
 			getFrontmatterValue(frontmatter, "spawning"),
 		),
@@ -293,7 +301,7 @@ function invalidCapabilityDeclarationDiagnostic(
 	if (!error) return null;
 	return {
 		code: "invalid-capability-declaration",
-		message: `Role "${resolvedAgentName}" has an invalid capability declaration in ${path}: ${error} Use documented comma-separated tools or deny-tools values, true or false for spawning or self-spawn, or omit the field.`,
+		message: `Role "${resolvedAgentName}" has an invalid capability declaration in ${path}: ${error} Use documented comma-separated tools, deny-tools or spawn-agents values, true or false for spawning or self-spawn, or omit the field.`,
 		path,
 		agentName: resolvedAgentName,
 	};
@@ -451,7 +459,7 @@ export function discoverAgentCatalog(
 		}
 	};
 
-	// Registered role packs are the entire package layer; the host ships no roles.
+	// Registered role packs and this fork's bundled team extension form the package layer.
 	const discovered = discoverRolePackPaths(options.onRolePackDiscovered);
 	diagnostics.push(...discovered.diagnostics);
 	const contributed = new Map<string, ListedAgentDefinition[]>();

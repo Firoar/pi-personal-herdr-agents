@@ -234,7 +234,7 @@ for (const backend of backends) {
 			const policy = JSON.parse(
 				readFileSync(`${sessionFile}.pi-herdr-subagent-policy.json`, "utf8"),
 			);
-			assert.equal(policy.version, 2);
+			assert.equal(policy.version, 3);
 			assert.equal(policy.persistent, true);
 
 			await waitForEntries(

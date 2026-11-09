@@ -74,8 +74,8 @@ project > global > package
 
 Role-pack definitions form the entire `package` source layer and add package
 name, version, and path provenance. Global and project definitions can
-intentionally override them. The host ships no roles, so an empty catalog is
-valid.
+intentionally override them. The upstream host ships no roles; this fork adds
+only its bundled team layer, so an empty custom catalog is valid.
 
 Within the package layer:
 

@@ -10,6 +10,10 @@ import {
 } from "../../core/declared-skills.ts";
 import { shellQuote } from "../../core/shell.ts";
 import {
+	formatSpawnAgents,
+	SPAWN_AGENTS_ENV,
+} from "../../core/spawn-agents.ts";
+import {
 	findStoredSessionModel,
 	getNewEntries,
 	readSubagentSessionPolicy,
@@ -121,6 +125,10 @@ export async function launchResumedPiSubagent(
 			...(policy.deniedTools.length > 0
 				? [`PI_DENY_TOOLS=${shellQuote(policy.deniedTools.join(","))}`]
 				: []),
+			// Always set, so a value left in the pane's shell never reaches the child.
+			`${SPAWN_AGENTS_ENV}=${shellQuote(
+				formatSpawnAgents("spawnAgents" in policy ? policy.spawnAgents : []),
+			)}`,
 			childDepthAssignment(),
 			modelScopeAssignment(request.modelScope),
 			// The saved session policy records no self-spawn opt-in.

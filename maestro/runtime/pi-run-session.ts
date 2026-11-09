@@ -30,6 +30,7 @@ import {
 	findLastAssistantSummary,
 	findObservedSessionRuntime,
 	inspectNoProgressSessionTail,
+	readSubagentSessionPolicy,
 	type AttributedSummary,
 } from "../adapters/pi/session.ts";
 import { createPiScriptShellResolver } from "../adapters/pi/script-shell.ts";
@@ -110,6 +111,16 @@ export function observePiActivity(
 		activity: read.ok ? read.activity : undefined,
 		activityRead: read,
 	};
+}
+
+/**
+ * The role a saved session was launched with, for the host's resume
+ * authorization. Missing or older policies report no role, which a restricted
+ * caller refuses; an unrestricted caller does not need it.
+ */
+export function readPiSessionAgent(sessionPath: string): string | undefined {
+	const policy = readSubagentSessionPolicy(sessionPath);
+	return policy.version === 3 ? policy.agent || undefined : undefined;
 }
 
 // pi-herdr-agents extension

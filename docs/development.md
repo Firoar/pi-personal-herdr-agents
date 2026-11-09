@@ -4,9 +4,9 @@ This page is for contributors. Read [`AGENTS.md`](../AGENTS.md) for repository r
 
 ## Code map
 
-The maestro seams remain inside one npm package with the same Pi extension
-entry point. Pi is the sole real harness and Herdr the sole real surface
-provider; fakes are for conformance tests only.
+The maestro seams remain inside one npm package with two Pi extension entry
+points: the host and the bundled team. Pi is the sole real harness and Herdr the
+sole real surface provider; fakes are for conformance tests only.
 
 - `pi-extension/subagents/index.ts` — Pi composition root: loads config,
   adopts the reload-surviving runtime, builds the per-load controllers, and
@@ -34,6 +34,14 @@ provider; fakes are for conformance tests only.
   functions for the public tools, commands, and message renderers.
 - `pi-extension/subagents/model-registry.ts`, `config-path.ts` — permanent
   host-local SDK capability glue and configuration-path conventions.
+- `pi-extension/team/index.ts`, `pi-extension/team/roles/` — the fork's bundled
+  orchestrator-team extension: registers four roles through the role-pack event
+  and adds the parent-only `/team` command. It imports nothing from the host.
+  `test/team.test.ts` covers its argument parser and role discovery.
+- `skills/team-protocol/`, `skills/strict-tests/`, `skills/team-research/`,
+  `skills/ponytail/` — the team's declared skills; see
+  [Orchestrator team](orchestrator-team.md) and
+  [`ATTRIBUTION.md`](../ATTRIBUTION.md).
 - `maestro/core/` — seam interfaces/types, activity and lifecycle projection,
   status, routing, wake-ups, and supervision; `undelivered-children.ts` is the
   shared registry-slot key and the check the child protocol uses to defer
@@ -55,6 +63,8 @@ provider; fakes are for conformance tests only.
 - `maestro/core/host-text.ts` — the one encoding for variable values in
   parent-facing host lines, lossless command-argument serializers, and display
   normalization for child text.
+- `maestro/core/spawn-agents.ts` — the role-scoped `spawn-agents` allowlist,
+  its `PI_SUBAGENT_SPAWN_AGENTS` environment, and the pre-resource refusal.
 - `maestro/adapters/pi/` — Pi launch, completion, session I/O, activity files,
   model SDK glue, and registry projection behind `PiHarnessAdapter`;
   `child/subagent-done.ts` implements the child protocol, and

@@ -217,6 +217,23 @@ export function resolveDenyTools(agentDefs: AgentDefaults | null): Set<string> {
 	return denied;
 }
 
+/**
+ * Resolve the roles this session's own definition allows it to launch.
+ * `spawning: false` removes the spawn tools entirely, so it needs no list.
+ */
+export function resolveSpawnAgents(agentDefs: AgentDefaults | null): string[] {
+	const raw = agentDefs?.spawnAgents;
+	if (!raw) return [];
+	return [
+		...new Set(
+			raw
+				.split(",")
+				.map((name) => name.trim())
+				.filter(Boolean),
+		),
+	];
+}
+
 export function discoverAgentCatalog(
 	pi?: Pick<ExtensionAPI, "events">,
 ): AgentCatalog {
@@ -230,7 +247,7 @@ export function discoverAgentCatalog(
 }
 
 export function missingRoleMessage(agentName: string): string {
-	return `Agent "${agentName}" was not found. pi-herdr-agents ships no roles: define it in .pi/agents or the global agents directory, install a role pack that provides it, or omit agent for a bare launch.`;
+	return `Agent "${agentName}" was not found. This fork ships the team-* roles; define any other role in .pi/agents or the global agents directory, install a role pack that provides it, or omit agent for a bare launch.`;
 }
 
 function formatAgentSource(agent: ListedAgentDefinition): string {

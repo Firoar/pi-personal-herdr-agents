@@ -21,6 +21,7 @@ import type { SubagentRuntime } from "./state.ts";
 import {
 	SubagentParams,
 	resolveDenyTools,
+	resolveSpawnAgents,
 	discoverAgentCatalog,
 	missingRoleMessage,
 	resolveEffectiveSessionMode,
@@ -117,6 +118,7 @@ export function createLaunchPlanner({
 						.map((s) => s.trim())
 						.filter(Boolean),
 					denyTools: [...resolveDenyTools(agentDefs)],
+					spawnAgents: resolveSpawnAgents(agentDefs),
 					autoExit: effectiveAutoExit,
 					interactive: effectiveInteractive,
 					persistent,

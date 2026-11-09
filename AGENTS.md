@@ -6,7 +6,15 @@ These instructions apply to humans and coding agents changing `pi-herdr-agents`.
 
 `pi-herdr-agents` (Pi Herdr Agents) is a Pi extension that launches asynchronous Pi child agents exclusively in Herdr. Ordinary runs group child panes in extension-owned `Agents` tabs by default. Writing tasks may opt into one isolated Herdr-managed Git worktree per branch. Legacy role definitions that request an external CLI fail before Herdr creates resources.
 
-The package is a pack-neutral execution host: it ships no agent roles and no planning or review workflows. Its only skill is `pi-herdr-agents`, a general operating guide for the host; do not add methodology or workflow skills here. Roles come from project or global definitions and separately installed role packs. Do not add bundled roles, a privileged default pack, or name-keyed workflow behavior; see [ADR-0013](docs/adr/0013-pack-neutral-execution-host.md).
+The host is a pack-neutral execution host for every role except this fork's
+bundled orchestrator team. The fork ships a second extension,
+`pi-extension/team/index.ts`, with four roles (`team-senior`, `team-worker`,
+`team-tester`, `team-researcher`), the `team-protocol`, `strict-tests`,
+`team-research`, and vendored `ponytail` skills, and a parent-only `/team`
+command. Do not add unrelated roles or workflows; every other named role still
+comes from project or global definitions and separately installed role packs.
+See [ADR-0018](docs/adr/0018-bundle-orchestrator-team.md). The host remains
+Pi-on-Herdr only: no other harness or terminal multiplexer.
 
 The extension is fire-and-forget: `subagent` returns an acknowledgement, and completion is delivered to the parent automatically. Never add polling guidance that tells callers to sleep, tail sessions, or repeatedly check status.
 
@@ -17,15 +25,19 @@ The extension is fire-and-forget: `subagent` returns an acknowledgement, and com
 - [`docs/README.md`](docs/README.md) — map of shipped contracts, active design, ADRs, and background research
 - [`CONTEXT.md`](CONTEXT.md) — workflow-domain glossary; read it before changing orchestration design
 - [`docs/adr/0003-installable-role-packs.md`](docs/adr/0003-installable-role-packs.md) — installable role-pack discovery, precedence, and collision contract
-- [`docs/adr/0013-pack-neutral-execution-host.md`](docs/adr/0013-pack-neutral-execution-host.md) — role-free host ownership, removed commands, and `roles.bundled` deprecation
+- [`docs/adr/0013-pack-neutral-execution-host.md`](docs/adr/0013-pack-neutral-execution-host.md) — upstream role-free host ownership, removed commands, and `roles.bundled` deprecation
+- [`docs/adr/0018-bundle-orchestrator-team.md`](docs/adr/0018-bundle-orchestrator-team.md) — this fork's bundled team extension, superseding ADR-0013 for the fork
+- [`docs/orchestrator-team.md`](docs/orchestrator-team.md) — the bundled team's roles, hierarchy, escalation, and limits
 - [`docs/worktree-subagents.md`](docs/worktree-subagents.md) — canonical worktree operating, review, recovery, and cleanup guide
 - [`RELEASING.md`](RELEASING.md) — release checks and publishing procedure
 
-Former bundled roles, `/plan`, its plan skill, and `/skill:orchestrate` now belong to the separately maintained `pi-herdr-roles` and `pi-herdr-pstack` packs. `/iterate`, `/btw`, and `/btw-close` were removed. Do not reintroduce them here.
+Former upstream bundled roles, `/plan`, its plan skill, and `/skill:orchestrate` remain removed; they belong to the separately maintained `pi-herdr-roles` and `pi-herdr-pstack` packs. The fork reintroduces only the orchestrator team, under `pi-extension/team/`. `/iterate`, `/btw`, and `/btw-close` remain removed.
 
 ## Code map
 
 - `pi-extension/subagents/index.ts` — Pi composition root: loads config, adopts the reload-surviving runtime, builds the per-load controllers, and registers session handlers, tools, commands, and renderers in order; also the `__test__` surface
+- `pi-extension/team/index.ts`, `pi-extension/team/roles/` — bundled orchestrator-team extension: registers its four roles through the role-pack event and adds the parent-only `/team` command; imports nothing from the host
+- `skills/team-protocol/`, `skills/strict-tests/`, `skills/team-research/`, `skills/ponytail/` — the team's declared skills; `ponytail` and the research method are vendored under MIT ([`ATTRIBUTION.md`](ATTRIBUTION.md))
 - `pi-extension/subagents/state.ts`, `catalog.ts`, `presentation.ts` — run-state types and reload slots; role catalog, `subagent` parameters, and launch policy; the parent message model, its one serializer, and the child-report envelope
 - `pi-extension/subagents/tool-boundary.ts` — the one registration boundary that encodes errors thrown by any host tool or command
 - `pi-extension/subagents/deferred-tools.ts` — `deferred` exposure for the routine host tools: records which tools this load registered, recognizes Pi's built-in `tool_search` by its reported source, and at `session_start` activates that search or, without it, the routine tools Pi kept
@@ -38,6 +50,7 @@ Former bundled roles, `/plan`, its plan skill, and `/skill:orchestrate` now belo
 - `maestro/core/worktree.ts`, `worktree-cleanup.ts` — manifest schema/state, handoff types, and cleanup eligibility/formatting
 - `maestro/core/realpath-without-opening.ts` — lstat/stat/readlink realpath used by cleanup and Herdr checkout comparisons so Bun never `open()`s a path that can freeze Pi
 - `maestro/core/git-environment.ts` owns repository-local environment isolation for host-managed Git commands while preserving user configuration, identity, and hooks.
+- `maestro/core/spawn-agents.ts` owns the role-scoped `spawn-agents` allowlist: the injected `PI_SUBAGENT_SPAWN_AGENTS` environment, its parser, and the refusal used before a launch acquires resources.
 - `maestro/core/deadline.ts` owns finite monotonic budgets for asynchronous launch, readiness, and handoff effects. Herdr subprocesses stay in `surfaces/herdr/herdr-cli.ts`; Git handoff subprocesses stay in `runtime/worktree-operations.ts`.
 - `maestro/core/host-text.ts` — the one encoding for variable values in parent-facing host lines, lossless command-argument serializers, and display normalization for child text
 - `maestro/adapters/pi/` — `PiHarnessAdapter`, launch transactions, completion evidence, session I/O, activity files, SDK model glue, and task-model registry projection; `launch.ts` is the fresh launch transaction, `launch-resume.ts` the resumed one, `launch-command.ts` the child command-line pieces both share, and `launch-operations.ts` the `PiLaunchOperations` seam with its surface-backed readiness and process-identity capture
@@ -53,7 +66,8 @@ Former bundled roles, `/plan`, its plan skill, and `/skill:orchestrate` now belo
 - `docs/research/` — evidence and alternatives, never the shipped contract
 - `scripts/update-tool-docs.ts`, `scripts/tool-docs.ts` — regenerate `docs/tools.md` blocks and the tool-schema snapshot (`npm run docs:tools`); `test/maestro/tool-schema.test.ts` fails on a breaking change against `test/fixtures/tool-schema/released.json`
 - `test/test.ts` — unit tests for public subagent extension seams
-- `test/package-manifest.test.js` — package manifest and pack-neutral package-content contract test
+- `test/team.test.ts` — unit tests for the bundled team's `/team` argument parser
+- `test/package-manifest.test.js` — package manifest and bundled-team package-content contract test
 - `test/integration/` — real Herdr and Pi lifecycle tests using the deterministic provider by default; `test/integration/agents/` holds test-only role fixtures, including the multi-wave `test-coordinator`
 - `test/bench/supervision-bench.mjs` — manual isolated-Herdr supervision transport benchmark; raw samples stay in `/tmp/issue29-bench/`
 
@@ -95,7 +109,7 @@ When behavior changes, update every affected surface in the same commit:
 - code map → this file and `docs/development.md`
 - role-pack discovery, precedence, or collision policy → `docs/adr/0003-installable-role-packs.md`
 - worktree behavior, handoff, recovery, or cleanup → `docs/worktree-subagents.md`
-- role prompts, `/plan`, and review-workflow methodology → the owning role pack, not this repository
+- role prompts and the bundled team's methodology → `pi-extension/team/roles/`, `skills/team-*`, and `docs/orchestrator-team.md`; other role packs own their own roles and workflows
 - the `PI_SUBAGENT_ID` child-context hint → `docs/tools.md` and `CONTEXT.md`
 - contributor/release verification → this file, `docs/development.md`, `.pi/skills/verify-pi-herdr-agents/SKILL.md`, `.pi/skills/run-integration-tests/SKILL.md`, or `RELEASING.md`
 - domain terminology → `CONTEXT.md`
@@ -137,7 +151,7 @@ Use `PI_TEST_MODEL="openai-codex/gpt-5.6-luna" PI_TEST_TIMEOUT=180000 npm run te
 Before committing:
 
 - inspect `git status` and the final diff;
-- confirm the package preview includes `CHANGELOG.md`, `README.md`, `config.json.example`, and `pi-extension/subagents/index.ts`, contains no `agents/` resources, no `skills/` resources other than the host-owned `skills/pi-herdr-agents/SKILL.md`, and no `pi-extension/subagents/plan-skill.md`, and excludes `pi-extension/subagents/workflow-worker.js`, plans, journals, sessions, prototypes, generated evidence, local config, and `openspec/`;
+- confirm the package preview includes `CHANGELOG.md`, `README.md`, `ATTRIBUTION.md`, `config.json.example`, `pi-extension/subagents/index.ts`, `pi-extension/team/index.ts`, the four `pi-extension/team/roles/*.md`, `docs/orchestrator-team.md`, the five declared skills, and no `agents/` resources or `pi-extension/subagents/plan-skill.md`, and excludes `pi-extension/subagents/workflow-worker.js`, plans, journals, sessions, prototypes, generated evidence, local config, and `openspec/`;
 - run `npm pack --dry-run` when package contents or documentation paths changed; durable configuration is `$PI_CODING_AGENT_DIR/herdr-agents/config.json`, never package-root `config.json` (move old files manually or re-run `/subagents-init`);
 - confirm that no generated plans, journals, sessions, provider configuration, test scripts, or review artifacts are staged; and
 - confirm that no accidental empty directory exists at the repository root:

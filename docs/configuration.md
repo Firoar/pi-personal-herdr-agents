@@ -300,13 +300,13 @@ it.
 
 ## Deprecated `roles.bundled`
 
-`roles.bundled` is deprecated and has no effect because this package ships no
-roles. Existing `true` and `false` values are accepted so that current
-configuration keeps loading; a parent session reports one warning per extension
-load naming the file and asking you to remove the key. The extension never
-rewrites the file. Other values remain configuration errors, as do unknown keys
-under `roles`. Registered role packs are the entire package layer, and global and
-project definitions keep their precedence over them.
+`roles.bundled` is deprecated and has no effect. Existing `true` and `false`
+values are accepted so that current configuration keeps loading; a parent session
+reports one warning per extension load naming the file and asking you to remove
+the key. The extension never rewrites the file. Other values remain configuration
+errors, as do unknown keys under `roles`. Registered role packs and this fork's
+bundled team extension form the package layer, and global and project definitions
+keep their precedence over them.
 
 ## Task-model init events
 

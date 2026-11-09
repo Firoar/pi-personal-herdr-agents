@@ -13,24 +13,28 @@ The host's own orchestration surfaces are:
 | Surface | Entry point | Behavior |
 | --- | --- | --- |
 | Delegation | `subagent`, `/subagent <agent> <task>` | Launches one bare or named child; results return automatically. |
+| Orchestrator team | `/team <slug> <task>` | Launches the bundled persistent senior in a worktree; it leads workers, a tester, and a researcher. |
 | Worktree handoff | `/worktree <name> [task]`, `/worktree list` | Forks the active conversation into a managed worktree. |
 
-Planning, review, and other multi-stage workflows belong to role packs and
-skills, not to this package. See
+This fork ships the [orchestrator team](orchestrator-team.md) as a second
+extension. Every other multi-stage workflow still belongs to role packs and
+skills, not to the host. See
 [ADR-0002](adr/0002-agent-workflow-skill-runtime-taxonomy.md),
-[ADR-0009](adr/0009-remove-workflow-subsystem.md), and
-[ADR-0013](adr/0013-pack-neutral-execution-host.md).
+[ADR-0009](adr/0009-remove-workflow-subsystem.md),
+[ADR-0013](adr/0013-pack-neutral-execution-host.md), and
+[ADR-0018](adr/0018-bundle-orchestrator-team.md).
 
 ## Roles and role packs
 
-This package is a pack-neutral execution host: it ships no agent roles, no
-`/plan` command, and no planning or review skills. Its one skill,
-`pi-herdr-agents`, is a general operating guide for the host. A named launch resolves
-`agent` from project definitions, global definitions, and roles registered by
-installed role packs, in that precedence order (see below). An empty catalog is
-valid. A bare launch without `agent` always works. An explicitly named role that
-is missing or invalid fails before Herdr creates a pane or worktree; it is never
-silently replaced by a bare agent.
+The host is a pack-neutral execution host; this fork adds one bundled role layer,
+the [orchestrator team](orchestrator-team.md). It ships no `/plan` command and no
+planning or review skills beyond that team. The `pi-herdr-agents` skill is a
+general operating guide for the host. A named launch resolves `agent` from
+project definitions, global definitions, and roles registered by role packs
+(including this package's team extension), in that precedence order (see below).
+An empty catalog is valid for custom roles. A bare launch without `agent` always
+works. An explicitly named role that is missing or invalid fails before Herdr
+creates a pane or worktree; it is never silently replaced by a bare agent.
 
 All subagents execute through Pi. Claude models remain available through normal
 Pi provider/model routing. Legacy role definitions that contain `cli` fail before
@@ -62,10 +66,16 @@ Discovery loads definitions in **package → global → project** order, so effe
 priority remains **project** (`.pi/agents/`) > **global**
 (`$PI_CODING_AGENT_DIR/agents/`, defaulting to `~/.pi/agent/agents/`) >
 **package**. Package definitions are the roles contributed by installed Pi role
-packs; there is no bundled layer. Both `subagents_list` and `/subagent list` show each
-visible definition's source; contributed roles include their package identity,
-for example `(package:@acme/security-roles)`. A hidden higher-priority definition
-still suppresses a visible lower-priority definition.
+packs and by this package's bundled team extension. Both `subagents_list` and
+`/subagent list` show each visible definition's source; contributed roles include
+their package identity, for example `(package:@acme/security-roles)` or
+`(package:pi-herdr-agents)` for the bundled team. A hidden higher-priority
+definition still suppresses a visible lower-priority definition.
+
+The bundled team roles are `team-senior`, `team-worker`, `team-tester`, and
+`team-researcher`. Override any of them with a same-name file in `.pi/agents/` or
+the global agents directory. See [Orchestrator team](orchestrator-team.md) for
+their shapes and the `spawn-agents` hierarchy.
 
 Custom roles and installable role packs are the package's main extension points.
 See [Custom Agents](#custom-agents) for the complete create, package, verify, and
@@ -291,6 +301,7 @@ Compare definitions against the reference below and verify them with
 | `spawning`    | boolean | Set exactly `false` to deny all subagent-spawning tools under the exact unquoted key `spawning:`. Only one `true` or `false` declaration is accepted. |
 | `self-spawn`  | boolean | Set exactly `true` under the exact unquoted key `self-spawn:` to let a child of this role launch another instance of the same role. Absent or `false` keeps the default, which blocks it. `spawning: false` still denies all spawning and wins. Only one `true` or `false` declaration is accepted. |
 | `deny-tools`  | string  | One non-empty inline comma-separated `pi-herdr-agents` tool list to suppress under the exact unquoted key `deny-tools:`; this is not a universal cross-extension deny list. YAML lists, containers, multiline values, quotes, comments, noncanonical keys, and duplicates are rejected. |
+| `spawn-agents` | string | One non-empty inline comma-separated role-name allowlist under the exact unquoted key `spawn-agents:`. When present, this role's `subagent` tool may launch only those roles, and a bare launch is refused. `subagent_resume` is allowed only when the saved session's recorded role is on the list; an unrecorded role is refused. Omit to leave launching unrestricted. `spawning: false` still denies every spawn tool. YAML lists, containers, multiline values, quotes, comments, noncanonical keys, and duplicates are rejected. |
 | `auto-exit`   | boolean | Auto-shutdown after Pi fully settles unless `agent_settled` reports an aborted run (`agent_settled.aborted`) or the latest assistant turn ends with `stopReason: "aborted"`; no `subagent_done` call needed. If the child launched subagents whose results have not been delivered to it yet, the shutdown waits for them. User input does not permanently disable auto-exit. Recommended for autonomous roles; not for interactive ones the user drives. Also determines the default value of `interactive` (see below). |
 | `interactive` | boolean | Override whether stall/recovery transitions wake the parent session. Defaults to the inverse of `auto-exit`: autonomous agents (`auto-exit: true`) are non-interactive and get stall pings; agents without `auto-exit` are interactive and stay quiet. Explicit values take precedence. |
 | `persistent` | boolean | Keep this role's specialist session open between tasks. Follow-up work uses `subagent_send`; persistent specialists cannot be resumed in v1. |
@@ -440,6 +451,37 @@ name: focused-agent
 deny-tools: subagent
 ---
 ```
+
+### `spawn-agents`
+
+Restrict which roles this session's `subagent` tool may launch. The host
+injects the list as `PI_SUBAGENT_SPAWN_AGENTS` at launch, refuses a bare
+launch when the list is present, and refuses any target role that is not on it.
+The check runs before Herdr creates a pane or worktree.
+
+`subagent_resume` is also a launch. It is allowed only when the saved session
+policy records a role that is on the caller's list; a session written by an
+older host, or with no recorded role, is refused because the resume cannot be
+authorized.
+
+```yaml
+---
+name: team-worker
+spawn-agents: team-researcher
+tools: read, write, edit, bash, subagent, caller_ping
+---
+```
+
+Use this to let leaf roles ask a shared research role without letting them
+spawn peers. `spawning: false` removes every spawn tool and wins over the
+allowlist. `self-spawn` still applies on top. The allowlist is a capability
+boundary for the host's tool, not an OS sandbox: a child with shell access can
+still start a raw process, and the delegation-depth limit still applies.
+
+A resumed session restores its saved allowlist and recorded role from the
+session policy. A caller with a non-empty allowlist refuses a resume when the
+policy records no role, so a session written by an older host needs an
+unrestricted caller.
 
 ### Recommended Configuration
 

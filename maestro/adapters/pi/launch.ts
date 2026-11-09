@@ -17,6 +17,10 @@ import {
 	parseDeclaredSkills,
 } from "../../core/declared-skills.ts";
 import { shellQuote } from "../../core/shell.ts";
+import {
+	formatSpawnAgents,
+	SPAWN_AGENTS_ENV,
+} from "../../core/spawn-agents.ts";
 import { ACCEPT_FILE_ENV, type AcceptSpec } from "../../core/accept.ts";
 import {
 	AcquisitionUncertainError,
@@ -37,7 +41,7 @@ import {
 	createWorktreeSessionFork,
 	seedSubagentSessionFile,
 	writeSubagentSessionPolicy,
-	type SubagentSessionPolicyV2,
+	type SubagentSessionPolicyV3,
 } from "./session.ts";
 import {
 	buildSubagentToolAllowlist,
@@ -89,6 +93,8 @@ export interface FreshPiLaunchRequest {
 		tools?: string;
 		skills?: string;
 		deniedTools: readonly string[];
+		/** Roles this child may launch; empty leaves it unrestricted. */
+		spawnAgents?: readonly string[];
 		/** Lets the child launch another instance of its own role. */
 		selfSpawn?: boolean;
 		autoExit: boolean;
@@ -210,7 +216,7 @@ interface PreparedSurface {
 interface PreparedSession extends PreparedSurface {
 	sessionFile: string;
 	activityFile: string;
-	policy: SubagentSessionPolicyV2;
+	policy: SubagentSessionPolicyV3;
 	initialTaskId?: string;
 	processIdentityFile?: string;
 }
@@ -591,6 +597,8 @@ function prepareChildSession(
 		owner: surface.worktree ? "managed-worktree" : "public",
 		tools: resolved.request.behavior.tools,
 		deniedTools: resolved.request.behavior.deniedTools,
+		spawnAgents: resolved.request.behavior.spawnAgents ?? [],
+		agent: resolved.request.agent ?? "",
 		persistent: resolved.request.behavior.persistent,
 		logicalId: resolved.request.behavior.logicalId ?? resolved.id,
 		generationId: resolved.request.behavior.generationId,
@@ -799,6 +807,10 @@ function buildPiCommand(
 				`PI_DENY_TOOLS=${shellQuote(request.behavior.deniedTools.join(","))}`,
 			);
 		}
+		// Always set, so a value left in the pane's shell never reaches the child.
+		env.push(
+			`${SPAWN_AGENTS_ENV}=${shellQuote(formatSpawnAgents(request.behavior.spawnAgents ?? []))}`,
+		);
 		env.push(`PI_SUBAGENT_NAME=${shellQuote(request.name)}`);
 		if (request.agent)
 			env.push(`PI_SUBAGENT_AGENT=${shellQuote(request.agent)}`);

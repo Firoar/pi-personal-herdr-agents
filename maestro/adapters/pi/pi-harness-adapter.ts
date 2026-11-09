@@ -193,6 +193,10 @@ export class PiHarnessAdapter implements HarnessAdapter {
 				"subagent_resume",
 			])
 				denied.add(name);
+		const spawnAgents = new Set([
+			...(defaults?.spawnAgents ?? []),
+			...(opts.behavior?.spawnAgents ?? []),
+		]);
 		const resolved = opts.resolvedLaunch;
 		const cwd = resolved ? resolved.cwd : opts.cwd;
 		const roleCwd = resolved ? resolved.roleCwd : defaults?.cwd;
@@ -234,6 +238,7 @@ export class PiHarnessAdapter implements HarnessAdapter {
 				cwd: roleCwd,
 				skills: (opts.behavior?.skills ?? defaults?.skills)?.join(","),
 				deniedTools: [...denied],
+				spawnAgents: [...spawnAgents],
 				// `spawning: false` removes the spawning tools, so it always wins.
 				selfSpawn: defaults?.selfSpawn === true && defaults.spawning !== false,
 				autoExit,

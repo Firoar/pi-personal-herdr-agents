@@ -42,6 +42,13 @@ import {
 	decideDelegation,
 	parseDelegationDepth,
 } from "../../maestro/core/delegation-depth.ts";
+import {
+	parseSpawnAgents,
+	SPAWN_AGENTS_ENV,
+	SPAWN_AGENT_REFUSAL_CODE,
+	spawnAgentRefusal,
+} from "../../maestro/core/spawn-agents.ts";
+import { readPiSessionAgent } from "../../maestro/runtime/index.ts";
 
 /**
  * Refuse a launch past the host-enforced delegation depth limit. The depth is
@@ -58,6 +65,58 @@ export function delegationDepthRefusal(
 	return decision.allowed
 		? undefined
 		: { message: decision.message, code: `delegation-${decision.reason}` };
+}
+
+/**
+ * The roles this session may launch, read from its own injected environment.
+ * An absent or empty list leaves it unrestricted; see core/spawn-agents.ts.
+ */
+export function callerSpawnAgents(
+	env: NodeJS.ProcessEnv = process.env,
+): string[] {
+	return parseSpawnAgents(env[SPAWN_AGENTS_ENV]);
+}
+
+/**
+ * Refuse a launch the caller's role did not allow, before any pane or worktree
+ * exists. The caller's allowlist is its own environment, never its parent's.
+ */
+export function launchSpawnAgentsRefusal(
+	agent: string | undefined,
+	env: NodeJS.ProcessEnv = process.env,
+): { message: string; code: string; reason: string } | undefined {
+	const refusal = spawnAgentRefusal(agent, callerSpawnAgents(env), "subagent");
+	return refusal
+		? {
+				message: refusal.message,
+				code: refusal.code,
+				reason: refusal.reason,
+			}
+		: undefined;
+}
+
+/** Resume is a launch only when the saved session's role is on the allowlist. */
+export function resumeSpawnAgentsRefusal(
+	sessionPath: string,
+	env: NodeJS.ProcessEnv = process.env,
+): { message: string; code: string } | undefined {
+	const allowed = callerSpawnAgents(env);
+	if (allowed.length === 0) return undefined;
+	const list = allowed.map((name) => encodeHostValue(name)).join(", ");
+	let agent: string | undefined;
+	try {
+		agent = readPiSessionAgent(sessionPath);
+	} catch {
+		return {
+			code: SPAWN_AGENT_REFUSAL_CODE,
+			message:
+				`This role may launch only: ${list}. The saved session policy could not ` +
+				"be read, so the resume is refused. Start a new session with one of " +
+				"those roles instead.",
+		};
+	}
+	const refusal = spawnAgentRefusal(agent, allowed, "subagent_resume");
+	return refusal ? { message: refusal.message, code: refusal.code } : undefined;
 }
 
 /**
@@ -142,6 +201,14 @@ export function registerSubagentTool(
 					return {
 						content: [{ type: "text", text: depthRefusal.message }],
 						details: { error: depthRefusal.code },
+					};
+				}
+
+				const spawnRefusal = launchSpawnAgentsRefusal(params.agent);
+				if (spawnRefusal) {
+					return {
+						content: [{ type: "text", text: spawnRefusal.message }],
+						details: { error: spawnRefusal.code },
 					};
 				}
 
@@ -493,6 +560,14 @@ export function registerResumeTool(
 					return {
 						content: [{ type: "text", text: depthRefusal.message }],
 						details: { error: depthRefusal.code },
+					};
+				}
+
+				const spawnRefusal = resumeSpawnAgentsRefusal(params.sessionPath);
+				if (spawnRefusal) {
+					return {
+						content: [{ type: "text", text: spawnRefusal.message }],
+						details: { error: spawnRefusal.code },
 					};
 				}
 

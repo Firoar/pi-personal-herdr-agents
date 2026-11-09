@@ -1,8 +1,8 @@
 # ADR-0013: Ship a pack-neutral execution host
 
-- **Status:** Accepted
+- **Status:** Accepted upstream; superseded for this fork by [ADR-0018](0018-bundle-orchestrator-team.md)
 - **Date:** 2026-10-05
-- **Scope:** `giuseppecrj/pi-herdr-agents`
+- **Scope:** `giuseppecrj/pi-herdr-agents` (upstream)
 - **Supersedes:** [ADR-0001](0001-btw-ephemeral-side-questions.md); the bundled-role
   provisions of [ADR-0003](0003-installable-role-packs.md); the shipped role and
   workflow mapping in [ADR-0002](0002-agent-workflow-skill-runtime-taxonomy.md)

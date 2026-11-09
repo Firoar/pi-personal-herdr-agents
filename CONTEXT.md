@@ -162,19 +162,27 @@ diagnostic, and launch fails before Herdr creates a pane or worktree. Remove
 _Avoid_: Silent Pi reinterpretation, compatibility adapter
 
 **Pack-neutral host**:
-This package as an execution host that ships no agent roles and no planning or
-review workflows. Its only skill, `pi-herdr-agents`, is a general operating guide for its own
-control tools. Role packs and project or global definitions supply every
-named role. An empty catalog is valid, and bare launches need no role.
-_Avoid_: Default role set, privileged pack, starter workflow
+The upstream execution-host posture: no agent roles and no planning or review
+workflows, with role packs and project or global definitions supplying every
+named role. This fork keeps that posture for every role except the bundled
+orchestrator team, which ships as a second extension.
+_Avoid_: Upstream default role set, privileged pack, starter workflow
+
+**Orchestrator team**:
+The fork's bundled hierarchy: a parent orchestrator, one persistent senior that
+owns a worktree, workers and testers that implement and verify bounded
+assignments, and a read-only researcher. Registered by
+`pi-extension/team/index.ts` through the role-pack event; bounded by
+`spawn-agents`.
+_Avoid_: Workflow engine, automatic orchestration, privileged default pack
 
 **Role pack**:
 A separately installed Pi package that registers role definitions through the
-`pi-herdr-subagents:roles:discover:v1` event. Registered packs form the whole
-package layer below global and project definitions; duplicate names across
-packs are disabled. A pack owns its roles' workflows, skills, prerequisites, and
-workflow glossary.
-_Avoid_: Bundled layer, protected fallback, load-order winner
+`pi-herdr-subagents:roles:discover:v1` event. Registered packs and this fork's
+team extension form the package layer below global and project definitions;
+duplicate names across packs are disabled. A pack owns its roles' workflows,
+skills, prerequisites, and workflow glossary.
+_Avoid_: Protected fallback, load-order winner
 
 **Child-context hint**:
 The `PI_SUBAGENT_ID` environment variable set for every fresh or resumed child
@@ -205,6 +213,15 @@ The `tools:` inline comma-separated role-frontmatter scalar passed to Pi for a
 public child. It is the enforced capability boundary available to a reviewer.
 `read,bash` is not read-only because Bash can mutate files.
 _Avoid_: Shell-as-read-only claim, implicit capability grant
+
+**Spawn allowlist**:
+The `spawn-agents:` inline comma-separated role-frontmatter scalar injected as
+`PI_SUBAGENT_SPAWN_AGENTS`. When present, the session's `subagent` tool may
+launch only the named roles, and a bare launch is refused. `subagent_resume` is
+allowed only when the saved session records a role on the list. Absent or empty
+leaves launching unrestricted. `spawning: false` wins. It bounds the host tool,
+not arbitrary shell processes.
+_Avoid_: Security sandbox, recursion guard, per-launch override
 
 **Persistent specialist**:
 A logical subagent that retains one policy-bound Pi session between sequential

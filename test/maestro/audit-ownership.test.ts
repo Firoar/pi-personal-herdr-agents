@@ -287,7 +287,7 @@ describe("audited launch ownership", () => {
 			const handle = await f.adapter.spawn(f.options);
 			assert.equal(ledgerAtDispatch, 1);
 			const policyAtDispatch = policies[0];
-			assert.ok(policyAtDispatch.version === 2);
+			assert.ok(policyAtDispatch.version === 3);
 			const child = f.adapter.getRunningChild(handle);
 			assert.equal(child.policyHash, policyAtDispatch.policyHash);
 			assert.equal(child.generationId, policyAtDispatch.generationId);

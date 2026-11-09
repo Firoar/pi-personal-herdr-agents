@@ -4,7 +4,7 @@ This guide is the operational reference for running writing agents in isolated G
 
 ## Quick start
 
-Run Pi inside Herdr from a Git checkout, then give each independent writing task a unique branch. The examples name `worker`, `scout`, and `reviewer` roles; `pi-herdr-agents` ships no roles, so those names must come from an installed role pack or a project/global definition. Omit `agent` for a bare child.
+Run Pi inside Herdr from a Git checkout, then give each independent writing task a unique branch. The examples name `worker`, `scout`, and `reviewer` roles; the fork ships the `team-*` roles, so other names must come from an installed role pack or a project/global definition. Omit `agent` for a bare child.
 
 ```typescript
 subagent({

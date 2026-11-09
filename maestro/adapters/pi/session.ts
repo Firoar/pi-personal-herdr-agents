@@ -58,7 +58,8 @@ export interface WorktreeSessionFork {
 	handoffMessage: string;
 }
 
-const SUBAGENT_POLICY_VERSION = 2;
+const SUBAGENT_POLICY_VERSION = 3;
+const SUBAGENT_POLICY_VERSION_V2 = 2;
 const SUBAGENT_POLICY_SUFFIX = ".pi-herdr-subagent-policy.json";
 
 export type SubagentSessionOwner = "public" | "managed-worktree";
@@ -91,9 +92,27 @@ export interface SubagentSessionPolicyV2 {
 	worktree?: PolicyWorktree;
 }
 
+export interface SubagentSessionPolicyV3 {
+	version: 3;
+	owner: SubagentSessionOwner;
+	/** null deliberately means Pi's unrestricted default tool selection. */
+	tools: string[] | null;
+	deniedTools: string[];
+	/** Roles this session may launch; empty leaves it unrestricted. */
+	spawnAgents: string[];
+	/** The role this session was launched with; empty for a bare launch. */
+	agent: string;
+	persistent: boolean;
+	logicalId: string;
+	generationId: string;
+	policyHash: string;
+	worktree?: PolicyWorktree;
+}
+
 export type SubagentSessionPolicy =
 	| SubagentSessionPolicyV1
-	| SubagentSessionPolicyV2;
+	| SubagentSessionPolicyV2
+	| SubagentSessionPolicyV3;
 
 export interface PersistentTaskEvent {
 	version: 1;
@@ -154,17 +173,32 @@ function normalizePolicyToolNames(
 }
 
 function canonicalPolicyJson(
-	policy: Omit<SubagentSessionPolicyV2, "policyHash">,
+	policy:
+		| Omit<SubagentSessionPolicyV2, "policyHash">
+		| Omit<SubagentSessionPolicyV3, "policyHash">,
 ): string {
-	const canonical = {
-		version: policy.version,
-		owner: policy.owner,
-		tools: policy.tools,
-		deniedTools: policy.deniedTools,
-		persistent: policy.persistent,
-		logicalId: policy.logicalId,
-		generationId: policy.generationId,
-	};
+	const canonical =
+		policy.version === 3
+			? {
+					version: policy.version,
+					owner: policy.owner,
+					tools: policy.tools,
+					deniedTools: policy.deniedTools,
+					spawnAgents: policy.spawnAgents,
+					agent: policy.agent,
+					persistent: policy.persistent,
+					logicalId: policy.logicalId,
+					generationId: policy.generationId,
+				}
+			: {
+					version: policy.version,
+					owner: policy.owner,
+					tools: policy.tools,
+					deniedTools: policy.deniedTools,
+					persistent: policy.persistent,
+					logicalId: policy.logicalId,
+					generationId: policy.generationId,
+				};
 	return JSON.stringify(
 		policy.worktree ? { ...canonical, worktree: policy.worktree } : canonical,
 	);
@@ -176,23 +210,27 @@ export function writeSubagentSessionPolicy(
 		owner: SubagentSessionOwner;
 		tools?: string | readonly string[];
 		deniedTools: readonly string[];
+		spawnAgents?: readonly string[];
+		agent?: string;
 		persistent?: boolean;
 		logicalId?: string;
 		generationId?: string;
 		worktree?: PolicyWorktree;
 	},
-): SubagentSessionPolicyV2 {
-	const unsigned: Omit<SubagentSessionPolicyV2, "policyHash"> = {
+): SubagentSessionPolicyV3 {
+	const unsigned: Omit<SubagentSessionPolicyV3, "policyHash"> = {
 		version: SUBAGENT_POLICY_VERSION,
 		owner: policy.owner,
 		tools: normalizePolicyToolNames(policy.tools),
 		deniedTools: normalizePolicyToolNames(policy.deniedTools) ?? [],
+		spawnAgents: normalizePolicyToolNames(policy.spawnAgents) ?? [],
+		agent: policy.agent ?? "",
 		persistent: policy.persistent ?? false,
 		logicalId: policy.logicalId ?? randomUUID(),
 		generationId: policy.generationId ?? randomUUID(),
 	};
 	if (policy.worktree) unsigned.worktree = policy.worktree;
-	const value: SubagentSessionPolicyV2 = {
+	const value: SubagentSessionPolicyV3 = {
 		...unsigned,
 		policyHash: createHash("sha256")
 			.update(canonicalPolicyJson(unsigned))
@@ -234,7 +272,11 @@ export function readSubagentSessionPolicy(
 	if (!isPolicyRecord(value))
 		throw policyError(sessionFile, "the saved launch policy is malformed");
 	const version = value.version;
-	if (version !== 1 && version !== SUBAGENT_POLICY_VERSION) {
+	if (
+		version !== 1 &&
+		version !== SUBAGENT_POLICY_VERSION_V2 &&
+		version !== SUBAGENT_POLICY_VERSION
+	) {
 		throw policyError(
 			sessionFile,
 			"the saved launch policy version is unsupported",
@@ -243,17 +285,31 @@ export function readSubagentSessionPolicy(
 	const expected =
 		version === 1
 			? new Set(["version", "owner", "tools", "deniedTools"])
-			: new Set([
-					"version",
-					"owner",
-					"tools",
-					"deniedTools",
-					"persistent",
-					"logicalId",
-					"generationId",
-					"policyHash",
-					"worktree",
-				]);
+			: version === SUBAGENT_POLICY_VERSION_V2
+				? new Set([
+						"version",
+						"owner",
+						"tools",
+						"deniedTools",
+						"persistent",
+						"logicalId",
+						"generationId",
+						"policyHash",
+						"worktree",
+					])
+				: new Set([
+						"version",
+						"owner",
+						"tools",
+						"deniedTools",
+						"spawnAgents",
+						"agent",
+						"persistent",
+						"logicalId",
+						"generationId",
+						"policyHash",
+						"worktree",
+					]);
 	if (Object.keys(value).some((key) => !expected.has(key))) {
 		throw policyError(
 			sessionFile,
@@ -302,6 +358,31 @@ export function readSubagentSessionPolicy(
 			);
 		}
 		return names;
+	};
+	const validateSpawnAgents = (names: JsonValue | undefined): string[] => {
+		if (names === undefined || !Array.isArray(names)) {
+			throw policyError(
+				sessionFile,
+				"the saved spawn-agent policy is malformed",
+			);
+		}
+		const allowed: string[] = [];
+		for (const name of names) {
+			if (!isString(name) || name === "" || /[,\s]/.test(name)) {
+				throw policyError(
+					sessionFile,
+					"the saved spawn-agent policy is malformed",
+				);
+			}
+			allowed.push(name);
+		}
+		if (new Set(allowed).size !== allowed.length) {
+			throw policyError(
+				sessionFile,
+				"the saved spawn-agent policy is malformed",
+			);
+		}
+		return allowed;
 	};
 	const tools = validateTools(value.tools, true, false);
 	const deniedTools = validateTools(value.deniedTools, false, true);
@@ -355,11 +436,44 @@ export function readSubagentSessionPolicy(
 		}
 		worktree = { path, workspaceId, branch, baseSha };
 	}
-	const unsigned: Omit<SubagentSessionPolicyV2, "policyHash"> = {
-		version: 2,
+	if (version === SUBAGENT_POLICY_VERSION_V2) {
+		const unsigned: Omit<SubagentSessionPolicyV2, "policyHash"> = {
+			version: SUBAGENT_POLICY_VERSION_V2,
+			owner,
+			tools,
+			deniedTools,
+			persistent: value.persistent,
+			logicalId: value.logicalId,
+			generationId: value.generationId,
+		};
+		if (worktree) unsigned.worktree = worktree;
+		if (
+			createHash("sha256")
+				.update(canonicalPolicyJson(unsigned))
+				.digest("hex") !== value.policyHash
+		) {
+			throw policyError(
+				sessionFile,
+				"the saved persistent launch policy hash is invalid",
+			);
+		}
+		return { ...unsigned, policyHash: value.policyHash };
+	}
+	const spawnAgents = validateSpawnAgents(value.spawnAgents);
+	const agent = value.agent;
+	if (!isString(agent)) {
+		throw policyError(
+			sessionFile,
+			"the saved launch agent policy is malformed",
+		);
+	}
+	const unsigned: Omit<SubagentSessionPolicyV3, "policyHash"> = {
+		version: SUBAGENT_POLICY_VERSION,
 		owner,
 		tools,
 		deniedTools,
+		spawnAgents,
+		agent,
 		persistent: value.persistent,
 		logicalId: value.logicalId,
 		generationId: value.generationId,
@@ -374,7 +488,7 @@ export function readSubagentSessionPolicy(
 			"the saved persistent launch policy hash is invalid",
 		);
 	}
-	const policy: SubagentSessionPolicyV2 = {
+	const policy: SubagentSessionPolicyV3 = {
 		...unsigned,
 		policyHash: value.policyHash,
 	};

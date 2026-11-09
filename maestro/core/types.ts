@@ -74,6 +74,7 @@ export interface Task {
 		systemPromptMode?: "replace" | "append";
 		skills?: string[];
 		denyTools?: string[];
+		spawnAgents?: string[];
 	};
 	/** Explicit tool allowlist; overrides Role.allowedTools when set. */
 	// pi-herdr-agents extension
@@ -112,6 +113,7 @@ export interface Role {
 		persistent?: boolean;
 		systemPromptMode?: "replace" | "append";
 		denyTools?: string[];
+		spawnAgents?: string[];
 		skills?: string[];
 		cwd?: string;
 	};

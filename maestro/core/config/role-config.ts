@@ -36,11 +36,12 @@ export function parseRoleConfig(
 	if (!isBoolean(rawConfig.roles.bundled)) {
 		invalidRoleConfig(source, "roles.bundled must be a boolean");
 	}
-	// The host ships no roles, so both legacy booleans are no-ops. Never rewrite
-	// user configuration to remove the key.
+	// The upstream host ships no roles; this fork adds only the team layer. Both
+	// legacy booleans are no-ops. Never rewrite user configuration to remove
+	// the key.
 	return {
 		deprecations: [
-			`Deprecated setting roles.bundled (${rawConfig.roles.bundled}) in ${source} is ignored: pi-herdr-agents no longer ships bundled roles. Install a role pack or add global or project definitions for the roles you use, then remove roles.bundled. The file was not changed.`,
+			`Deprecated setting roles.bundled (${rawConfig.roles.bundled}) in ${source} is ignored: pi-herdr-agents does not use roles.bundled to load roles. Install a role pack or add global or project definitions for the roles you use, then remove roles.bundled. The file was not changed.`,
 		],
 	};
 }

@@ -90,6 +90,7 @@ test("Task17 core discovery consumes the injected role-pack protocol and preserv
 				persistent: undefined,
 				systemPromptMode: undefined,
 				denyTools: ["write"],
+				spawnAgents: undefined,
 				skills: ["skill-a", "skill-b"],
 				cwd: "role-folder",
 			},
