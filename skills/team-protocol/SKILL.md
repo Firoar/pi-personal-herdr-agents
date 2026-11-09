@@ -25,6 +25,36 @@ No team member asks the human directly. Workers, testers, and the researcher
 escalate to the senior. The senior escalates to the orchestrator. The
 orchestrator asks the human.
 
+## Launch policy from the orchestrator
+
+Your own launch sets your model, thinking, and skills. Before launching any
+child, read the task for a `Team launch policy for children` block. When it is
+present, pass the named `model`, `thinking`, and `skills` values on every
+`subagent` call. When a value says "role default", omit that argument and let
+the child role decide.
+
+Baseline skills — keep them when you override `skills`:
+
+| Role | Baseline skills |
+| --- | --- |
+| `team-senior` | `ponytail`, `team-protocol` |
+| `team-worker` | `team-protocol` |
+| `team-tester` | `team-protocol`, `strict-tests` |
+| `team-researcher` | `team-research` |
+
+`skills` replaces the child role's default list; it does not add to it. If the
+brief names extra skills, pass the baseline list plus the extras, for example
+`skills: "team-protocol,my-skill"` to a worker.
+
+Model precedence for each child is: the `model` you pass, then the child role's
+frontmatter, then `models.agents`, then `models.default`, then your own model.
+Because the bundled roles pin their model, a `models.agents` entry does not
+override them; pass `model` explicitly.
+
+Your own launch is a managed-worktree child, so its model must be one exact
+`provider/model-id`; a comma fallback list is rejected. Workers, testers, and
+the researcher are ordinary children and may use a fallback list.
+
 ## Escalate
 
 Use `caller_ping` with exactly this body:

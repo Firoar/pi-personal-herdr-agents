@@ -388,7 +388,7 @@
 		{
 			"name": "team",
 			"scopes": ["parent"],
-			"description": "Launch a team: /team <slug> <task> [--model=<provider/model>] [--thinking=<level>]"
+			"description": "Launch a team: /team <slug> <task> [--model=...] [--thinking=...] [per-child flags]"
 		},
 		{
 			"name": "worktree",

@@ -89,11 +89,58 @@ test("uses the role defaults when no overrides are given", () => {
 	assert.doesNotMatch(parsed.toolCall, /thinking:/);
 });
 
+test("applies per-child model, thinking, and skill flags", () => {
+	const parsed = parseTeamArgs(
+		"auth Add login --worker-model=provider/worker --worker-thinking=medium " +
+			"--tester-model=provider/tester --tester-thinking=high " +
+			"--research-model=provider/research --research-thinking=low " +
+			"--skills=my-skill",
+	);
+	assert.ok("toolCall" in parsed);
+	const call = parsed.toolCall;
+	assert.match(call, /skills: "ponytail,team-protocol,my-skill"/);
+	for (const value of [
+		"worker (team-worker)",
+		"tester (team-tester)",
+		"researcher (team-researcher)",
+		"provider/worker",
+		"provider/tester",
+		"provider/research",
+		"team-protocol,my-skill",
+		"team-protocol,strict-tests,my-skill",
+		"team-research,my-skill",
+		"Pass these exact model, thinking, and skills values",
+	])
+		assert.ok(call.includes(value), `missing ${value}`);
+});
+
+test("keeps unknown -- tokens in the task", () => {
+	const parsed = parseTeamArgs("auth Add login --not-a-team-flag");
+	assert.ok("toolCall" in parsed);
+	assert.match(parsed.toolCall, /--not-a-team-flag/);
+});
+
+test("rejects invalid thinking, skill names, and empty flags", () => {
+	const badThinking = parseTeamArgs("auth Add login --worker-thinking=ultra");
+	assert.ok("error" in badThinking);
+	assert.match(badThinking.error, /Invalid --worker-thinking/);
+
+	const badSkill = parseTeamArgs("auth Add login --skills=Bad_Name");
+	assert.ok("error" in badSkill);
+	assert.match(badSkill.error, /Invalid skill name/);
+
+	const empty = parseTeamArgs("auth Add login --tester-model=");
+	assert.ok("error" in empty);
+	assert.match(empty.error, /--tester-model needs a value/);
+});
+
 test("rejects a missing task and an unsafe slug", () => {
-	assert.deepEqual(parseTeamArgs(""), {
-		error:
-			"Usage: /team <slug> <task> [--model=<provider/model>] [--thinking=<level>]",
-	});
+	const empty = parseTeamArgs("");
+	assert.ok("error" in empty);
+	assert.match(empty.error, /^Usage: \/team/);
+	assert.match(empty.error, /--worker-model/);
+	assert.match(empty.error, /--skills/);
+
 	assert.ok("error" in parseTeamArgs("auth"));
 	assert.ok("error" in parseTeamArgs("../auth Add login"));
 	assert.ok("error" in parseTeamArgs("team/auth Add login"));

@@ -77,6 +77,34 @@ files, or override the role with a same-name file in `.pi/agents/` or
 `$PI_CODING_AGENT_DIR/agents/`. If the orchestrator runs with `--models` or
 `enabledModels`, include the DeepSeek ID in that scope.
 
+### Per-team models and skills
+
+`/team` accepts per-child overrides and writes them into the senior's brief:
+
+```text
+/team auth Add rate limiting \
+  --model=provider/senior-model --thinking=high \
+  --worker-model=provider/worker-model --worker-thinking=medium \
+  --tester-model=provider/tester-model --tester-thinking=high \
+  --research-model=provider/research-model --research-thinking=low \
+  --skills=my-skill
+```
+
+- `--model` / `--thinking` set the senior's own launch.
+- `--worker-*`, `--tester-*`, `--research-*` set the child rows in the brief.
+- `--skills` adds skills to the whole team. The senior launch gets
+  `ponytail,team-protocol,<extras>`; the brief tells the senior to pass
+  `team-protocol,<extras>` to workers, `team-protocol,strict-tests,<extras>` to
+  testers, and `team-research,<extras>` to the researcher.
+- `skills` replaces a role's default list when passed to `subagent`; the brief
+  always includes the baseline plus the extras.
+- The senior's model must be one exact ID (worktree launch). Workers, testers,
+  and the researcher may use a fallback list.
+
+For a durable change, edit the role files or override them in `.pi/agents/`.
+A project skill used by a worktree team must be committed or installed globally,
+because uncommitted parent files are not copied into the worktree.
+
 ## Hierarchy and escalation
 
 ```

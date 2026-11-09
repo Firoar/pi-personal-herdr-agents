@@ -134,7 +134,10 @@ const parentToolTable = (tools: CapturedTool[]) =>
 export const COMMAND_USAGE = {
 	subagent: ["/subagent <agent> <task>", "/subagent list"],
 	"subagents-init": ["/subagents-init [preferences]"],
-	team: ["/team <slug> <task> [--model=<provider/model>] [--thinking=<level>]"],
+	team: [
+		"/team <slug> <task> [--model=<senior-model>] [--thinking=<level>]",
+		"/team <slug> <task> [--worker-model=<model>] [--worker-thinking=<level>] [--tester-model=<model>] [--tester-thinking=<level>] [--research-model=<model>] [--research-thinking=<level>] [--skills=<names>]",
+	],
 	worktree: [
 		"/worktree <name> [task]",
 		"/worktree list",

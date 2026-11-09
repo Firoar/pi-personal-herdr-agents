@@ -140,7 +140,7 @@ Children get `caller_ping` to ask the parent for help. Interactive children also
 
 | Command | Use |
 | --- | --- |
-| `/team <slug> <task> [--model=…] [--thinking=…]` | Launch the bundled orchestrator team in a new worktree. |
+| `/team <slug> <task> [--model=…] [--thinking=…] [per-child flags]` | Launch the bundled orchestrator team in a new worktree. |
 | `/subagent <agent> <task>` | Launch a named role. `/subagent list` lists roles. |
 | `/worktree <name> [task]` | Continue this conversation in a new managed worktree. `/worktree list` and `/worktree remove <target>` manage them. |
 | `/subagents-init [preferences]` | Draft task-category model preferences from the live model registry. |
@@ -239,7 +239,9 @@ The senior plans, assigns bounded work, reviews the diff, runs the tests, and
 commits. Workers and testers escalate to the senior; the senior escalates to
 you. The team uses one worktree, so writers stay serial. All four roles default
 to `opencode-go/deepseek-v4.1-flash` at `thinking: max`; pass `--model` or
-`--thinking` to `/team` to override them.
+`--thinking` to `/team` to override the senior, and `--worker-model`,
+`--tester-model`, `--research-model` (plus matching `-thinking` flags) and
+`--skills` for the rest of the team.
 
 Read [Orchestrator team](docs/orchestrator-team.md) for the roles, the
 `spawn-agents` hierarchy, escalation envelopes, and limits.

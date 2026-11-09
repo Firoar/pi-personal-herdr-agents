@@ -49,7 +49,7 @@ This page is the detailed reference for the tools, commands, and run lifecycle o
 | --- | --- | --- |
 | `/subagent` | `/subagent <agent> <task>`<br>`/subagent list` | Spawn a subagent: /subagent \<agent> \<task>; list agents: /subagent list |
 | `/subagents-init` | `/subagents-init [preferences]` | Draft task-category model preferences from the live registry; optional arguments set ranking preferences |
-| `/team` | `/team <slug> <task> [--model=<provider/model>] [--thinking=<level>]` | Launch a team: /team \<slug> \<task> [--model=\<provider/model>] [--thinking=\<level>] |
+| `/team` | `/team <slug> <task> [--model=<senior-model>] [--thinking=<level>]`<br>`/team <slug> <task> [--worker-model=<model>] [--worker-thinking=<level>] [--tester-model=<model>] [--tester-thinking=<level>] [--research-model=<model>] [--research-thinking=<level>] [--skills=<names>]` | Launch a team: /team \<slug> \<task> [--model=...] [--thinking=...] [per-child flags] |
 | `/worktree` | `/worktree <name> [task]`<br>`/worktree list`<br>`/worktree remove <target>` | Fork into a worktree, list retained worktrees, or explicitly remove one |
 <!-- generated:commands:end -->
 
