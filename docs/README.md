@@ -7,6 +7,8 @@ are evidence, not shipped contracts, when a later ADR supersedes them.
 ## Shipped contracts
 
 - [`../README.md`](../README.md) — installation, everyday use, and safety.
+- [`../GUIDE.md`](../GUIDE.md) — practical walkthrough of the host, the bundled
+  team, prompting, model and skill flags, and troubleshooting.
 - [`tools.md`](tools.md) — public tools, commands, parameters, and run
   lifecycle.
 - [`delegation-outcome-contract.md`](delegation-outcome-contract.md) — the

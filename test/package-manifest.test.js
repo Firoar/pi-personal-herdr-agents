@@ -113,6 +113,7 @@ describe("fork package contents", () => {
 		);
 		for (const path of [
 			"README.md",
+			"GUIDE.md",
 			"AGENTS.md",
 			"CHANGELOG.md",
 			"CONTEXT.md",

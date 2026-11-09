@@ -11,6 +11,8 @@ Asynchronous subagents for [Pi](https://github.com/earendil-works/pi), running e
 Delegate investigation, implementation, and review without blocking the parent session. Each child runs as a real Pi process in its own Herdr pane. Its result comes back to the parent automatically when it finishes.
 
 > **Agents:** load the operating guide with `/skill:pi-herdr-agents`. It covers launching, supervising, interrupting, cancelling, and resuming children, worktrees, persistent specialists, model routing, and configuration. The source is [`skills/pi-herdr-agents/SKILL.md`](skills/pi-herdr-agents/SKILL.md). Contributors: read [`AGENTS.md`](AGENTS.md).
+>
+> **New here?** Read [`GUIDE.md`](GUIDE.md) for a practical walkthrough of the host, the bundled team, prompting, model and skill flags, and troubleshooting.
 
 ## Contents
 
@@ -340,6 +342,7 @@ More checks are in [Troubleshooting](docs/troubleshooting.md).
 
 | Page | Contents |
 | --- | --- |
+| [Guide](GUIDE.md) | Practical walkthrough: what it does, the team, prompting, model/skill flags, configuration, and troubleshooting |
 | [Tools and lifecycle](docs/tools.md) | Every tool and command, parameters, status labels, persistent specialists, interrupt, cancel, resume, and `/worktree` |
 | [Configuration](docs/configuration.md) | `config.json`, model preferences, `/subagents-init`, init events, sidebar markers, supervision, and pane placement |
 | [Roles and custom agents](docs/roles.md) | Discovery, frontmatter reference, tool access control, and role packs |
